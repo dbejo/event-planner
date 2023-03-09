@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `Event` (
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table EventMgrDB.Event: ~1 rows (approximately)
+DELETE FROM `Event`;
 INSERT INTO `Event` (`EventID`, `Name`, `Date`, `Location`, `Description`) VALUES
 	(1, 'DÍszvacsora 2023', '2023-03-05', NULL, NULL);
 
@@ -47,7 +48,8 @@ CREATE TABLE IF NOT EXISTS `Organization` (
   CONSTRAINT `FK_Organization_Organization` FOREIGN KEY (`FK_ParentOrganizationID`) REFERENCES `Organization` (`OrganizationID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Organization: ~8 rows (approximately)
+-- Dumping data for table EventMgrDB.Organization: ~9 rows (approximately)
+DELETE FROM `Organization`;
 INSERT INTO `Organization` (`OrganizationID`, `Toplevel`, `Name`, `FK_ParentOrganizationID`) VALUES
 	(1, b'1', 'Belügy', NULL),
 	(2, b'1', 'Külügy', NULL),
@@ -70,6 +72,7 @@ CREATE TABLE IF NOT EXISTS `Person` (
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table EventMgrDB.Person: ~3 rows (approximately)
+DELETE FROM `Person`;
 INSERT INTO `Person` (`PersonID`, `FirstName`, `LastName`, `Notes`) VALUES
 	(1, 'Jakab', 'Gipsz', 'Laktózérzékeny; vegetáriánus'),
 	(2, 'Beáta', 'Nagy', 'Nem fogyaszt cukrot'),
@@ -88,6 +91,7 @@ CREATE TABLE IF NOT EXISTS `PersonToEvent` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table EventMgrDB.PersonToEvent: ~2 rows (approximately)
+DELETE FROM `PersonToEvent`;
 INSERT INTO `PersonToEvent` (`FK_EventID`, `FK_PersonID`, `CreatedDate`) VALUES
 	(1, 3, '2023-03-01 22:21:33'),
 	(1, 2, '2023-03-01 21:21:43');
@@ -105,11 +109,24 @@ CREATE TABLE IF NOT EXISTS `PersonToOrganization` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table EventMgrDB.PersonToOrganization: ~4 rows (approximately)
+DELETE FROM `PersonToOrganization`;
 INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`) VALUES
 	(1, 5, 'Őrmester'),
 	(2, 6, 'Nagykövet'),
 	(3, 7, 'Titkár'),
 	(1, 9, 'Polgárőrparancsnok');
+
+-- Dumping structure for procedure EventMgrDB.SP_RegisterUser
+DROP PROCEDURE IF EXISTS `SP_RegisterUser`;
+DELIMITER //
+CREATE PROCEDURE `SP_RegisterUser`(
+    IN P_username VARCHAR(100),
+    IN P_password VARCHAR(100)
+)
+BEGIN
+    INSERT INTO Users (UserName, PasswordHash) VALUES (P_username, P_password);
+END//
+DELIMITER ;
 
 -- Dumping structure for table EventMgrDB.Users
 DROP TABLE IF EXISTS `Users`;
@@ -117,13 +134,17 @@ CREATE TABLE IF NOT EXISTS `Users` (
   `UserID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `UserName` varchar(100) NOT NULL,
   `PasswordHash` varchar(100) NOT NULL,
-  `FK_UserTypeID` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `FK_UserTypeID` smallint(5) unsigned NOT NULL DEFAULT 2,
   PRIMARY KEY (`UserID`),
   KEY `fk_Users_Roles` (`FK_UserTypeID`),
   CONSTRAINT `fk_Users_Roles` FOREIGN KEY (`FK_UserTypeID`) REFERENCES `UserType` (`UserTypeID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Users: ~0 rows (approximately)
+-- Dumping data for table EventMgrDB.Users: ~2 rows (approximately)
+DELETE FROM `Users`;
+INSERT INTO `Users` (`UserID`, `UserName`, `PasswordHash`, `FK_UserTypeID`) VALUES
+	(1, 'test', 'password', 2),
+	(2, 'test2', 'password2', 2);
 
 -- Dumping structure for table EventMgrDB.UserType
 DROP TABLE IF EXISTS `UserType`;
@@ -134,6 +155,7 @@ CREATE TABLE IF NOT EXISTS `UserType` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table EventMgrDB.UserType: ~3 rows (approximately)
+DELETE FROM `UserType`;
 INSERT INTO `UserType` (`UserTypeID`, `UserTypeName`) VALUES
 	(1, 'Admin'),
 	(2, 'Felhasználó'),
@@ -151,6 +173,17 @@ CREATE TABLE `V_AllPeopleWithRole` (
 	`Role` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`OrgPath` VARCHAR(403) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`OrganizationID` INT(10) UNSIGNED NOT NULL
+) ENGINE=MyISAM;
+
+-- Dumping structure for view EventMgrDB.V_ListUsers
+DROP VIEW IF EXISTS `V_ListUsers`;
+-- Creating temporary table to overcome VIEW dependency errors
+CREATE TABLE `V_ListUsers` (
+	`UserID` INT(10) UNSIGNED NOT NULL,
+	`UserName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`PasswordHash` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`FK_UserTypeID` SMALLINT(5) UNSIGNED NOT NULL,
+	`UserTypeName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci'
 ) ENGINE=MyISAM;
 
 -- Dumping structure for view EventMgrDB.V_OrgPath
@@ -179,6 +212,12 @@ DROP VIEW IF EXISTS `V_AllPeopleWithRole`;
 -- Removing temporary table and create final VIEW structure
 DROP TABLE IF EXISTS `V_AllPeopleWithRole`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_AllPeopleWithRole` AS select `PD`.`PersonID` AS `PersonID`,`PD`.`FirstName` AS `FirstName`,`PD`.`LastName` AS `LastName`,`PD`.`Notes` AS `Notes`,`PD`.`FK_OrganizationID` AS `FK_OrganizationID`,`PD`.`Role` AS `Role`,`OP`.`OrgPath` AS `OrgPath`,`OP`.`OrganizationID` AS `OrganizationID` from ((`V_OrgPath` `OP` join `PersonToOrganization` `PO` on(`PO`.`FK_OrganizationID` = `OP`.`OrganizationID`)) join `V_PersonDetails` `PD` on(`PO`.`FK_PersonID` = `PD`.`PersonID` and `PO`.`FK_OrganizationID` = `PD`.`FK_OrganizationID`)) order by 3,2;
+
+-- Dumping structure for view EventMgrDB.V_ListUsers
+DROP VIEW IF EXISTS `V_ListUsers`;
+-- Removing temporary table and create final VIEW structure
+DROP TABLE IF EXISTS `V_ListUsers`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_ListUsers` AS select `u`.`UserID` AS `UserID`,`u`.`UserName` AS `UserName`,`u`.`PasswordHash` AS `PasswordHash`,`u`.`FK_UserTypeID` AS `FK_UserTypeID`,`ut`.`UserTypeName` AS `UserTypeName` from (`Users` `u` join `UserType` `ut` on(`u`.`FK_UserTypeID` = `ut`.`UserTypeID`));
 
 -- Dumping structure for view EventMgrDB.V_OrgPath
 DROP VIEW IF EXISTS `V_OrgPath`;
