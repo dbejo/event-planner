@@ -120,11 +120,22 @@ INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`) 
 DROP PROCEDURE IF EXISTS `SP_RegisterUser`;
 DELIMITER //
 CREATE PROCEDURE `SP_RegisterUser`(
-    IN P_username VARCHAR(100),
-    IN P_password VARCHAR(100)
+    IN p_username VARCHAR(100),
+    IN p_password VARCHAR(100),
+    OUT p_result VARCHAR(100)
 )
 BEGIN
-    INSERT INTO Users (UserName, PasswordHash) VALUES (P_username, P_password);
+    DECLARE username_count INT;
+    SELECT COUNT(*) INTO username_count FROM Users WHERE username = p_username;
+
+    IF username_count > 0 THEN
+        SET p_result = 'Error: Username already exists';
+    ELSE
+        INSERT INTO Users (UserName, PasswordHash)
+        VALUES (p_username, p_password);
+        SET p_result = 'User inserted successfully';
+      
+    END IF;
 END//
 DELIMITER ;
 
@@ -138,13 +149,15 @@ CREATE TABLE IF NOT EXISTS `Users` (
   PRIMARY KEY (`UserID`),
   KEY `fk_Users_Roles` (`FK_UserTypeID`),
   CONSTRAINT `fk_Users_Roles` FOREIGN KEY (`FK_UserTypeID`) REFERENCES `UserType` (`UserTypeID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Users: ~2 rows (approximately)
+-- Dumping data for table EventMgrDB.Users: ~4 rows (approximately)
 DELETE FROM `Users`;
 INSERT INTO `Users` (`UserID`, `UserName`, `PasswordHash`, `FK_UserTypeID`) VALUES
 	(1, 'test', 'password', 2),
-	(2, 'test2', 'password2', 2);
+	(2, 'test2', 'password2', 2),
+	(3, 'test3', 'password2', 2),
+	(4, 'test4', 'password2', 2);
 
 -- Dumping structure for table EventMgrDB.UserType
 DROP TABLE IF EXISTS `UserType`;
