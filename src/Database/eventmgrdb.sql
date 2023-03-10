@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `Event` (
   PRIMARY KEY (`EventID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Event: ~1 rows (approximately)
+-- Dumping data for table EventMgrDB.Event: ~0 rows (approximately)
 DELETE FROM `Event`;
 INSERT INTO `Event` (`EventID`, `Name`, `Date`, `Location`, `Description`) VALUES
 	(1, 'DÍszvacsora 2023', '2023-03-05', NULL, NULL);
@@ -65,18 +65,20 @@ INSERT INTO `Organization` (`OrganizationID`, `Toplevel`, `Name`, `FK_ParentOrga
 DROP TABLE IF EXISTS `Person`;
 CREATE TABLE IF NOT EXISTS `Person` (
   `PersonID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `FirstName` varchar(100) DEFAULT '',
-  `LastName` varchar(100) DEFAULT '',
+  `FirstName` varchar(100) NOT NULL DEFAULT '',
+  `LastName` varchar(100) NOT NULL DEFAULT '',
   `Notes` varchar(2000) DEFAULT NULL COMMENT 'Allergy, pereferences, other - free text',
+  `PersonalEmail` varchar(100) DEFAULT NULL COMMENT 'Personal email',
   PRIMARY KEY (`PersonID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Person: ~3 rows (approximately)
+-- Dumping data for table EventMgrDB.Person: ~4 rows (approximately)
 DELETE FROM `Person`;
-INSERT INTO `Person` (`PersonID`, `FirstName`, `LastName`, `Notes`) VALUES
-	(1, 'Jakab', 'Gipsz', 'Laktózérzékeny; vegetáriánus'),
-	(2, 'Beáta', 'Nagy', 'Nem fogyaszt cukrot'),
-	(3, 'Ágnes', 'Kovács', 'Gluténérzékeny');
+INSERT INTO `Person` (`PersonID`, `FirstName`, `LastName`, `Notes`, `PersonalEmail`) VALUES
+	(1, 'Jakab', 'Gipsz', 'Laktózérzékeny; vegetáriánus', NULL),
+	(2, 'Beáta', 'Nagy', 'Nem fogyaszt cukrot', NULL),
+	(3, 'Ágnes', 'Kovács', 'Gluténérzékeny', NULL),
+	(4, 'Jolán', 'Kittinger', 'Nem fogyaszt halat', 'itt@ott');
 
 -- Dumping structure for table EventMgrDB.PersonToEvent
 DROP TABLE IF EXISTS `PersonToEvent`;
@@ -102,6 +104,7 @@ CREATE TABLE IF NOT EXISTS `PersonToOrganization` (
   `FK_PersonID` int(10) unsigned NOT NULL,
   `FK_OrganizationID` int(10) unsigned NOT NULL,
   `Role` varchar(100) NOT NULL DEFAULT '',
+  `RoleEmail` varchar(100) DEFAULT NULL COMMENT 'Organizational email',
   KEY `FK_PersonToOrganization_Person` (`FK_PersonID`),
   KEY `FK_PersonToOrganization_Organization` (`FK_OrganizationID`),
   CONSTRAINT `FK_PersonToOrganization_Organization` FOREIGN KEY (`FK_OrganizationID`) REFERENCES `Organization` (`OrganizationID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -110,11 +113,26 @@ CREATE TABLE IF NOT EXISTS `PersonToOrganization` (
 
 -- Dumping data for table EventMgrDB.PersonToOrganization: ~4 rows (approximately)
 DELETE FROM `PersonToOrganization`;
-INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`) VALUES
-	(1, 5, 'Őrmester'),
-	(2, 6, 'Nagykövet'),
-	(3, 7, 'Titkár'),
-	(1, 9, 'Polgárőrparancsnok');
+INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`, `RoleEmail`) VALUES
+	(1, 5, 'Őrmester', NULL),
+	(2, 6, 'Nagykövet', NULL),
+	(3, 7, 'Titkár', NULL),
+	(1, 9, 'Polgárőrparancsnok', NULL);
+
+-- Dumping structure for procedure EventMgrDB.SP_CreatePerson
+DROP PROCEDURE IF EXISTS `SP_CreatePerson`;
+DELIMITER //
+CREATE PROCEDURE `SP_CreatePerson`(
+    IN p_firstname VARCHAR(100),
+    IN p_lastname VARCHAR(100),
+    IN p_notes VARCHAR(2000),
+    IN p_personalemail VARCHAR(100)
+)
+BEGIN
+  INSERT INTO Person (FirstName, LastName, Notes, PersonalEmail)
+  VALUES (p_firstname, p_lastname, p_notes, p_personalemail);
+END//
+DELIMITER ;
 
 -- Dumping structure for procedure EventMgrDB.SP_RegisterUser
 DROP PROCEDURE IF EXISTS `SP_RegisterUser`;
@@ -136,6 +154,22 @@ BEGIN
         SET p_result = 'User inserted successfully';
       
     END IF;
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_UpdatePerson
+DROP PROCEDURE IF EXISTS `SP_UpdatePerson`;
+DELIMITER //
+CREATE PROCEDURE `SP_UpdatePerson`(
+    IN p_personid INT,
+	 IN p_firstname VARCHAR(100),
+    IN p_lastname VARCHAR(100),
+    IN p_notes VARCHAR(2000),
+    IN p_personalemail VARCHAR(100)
+)
+BEGIN
+  UPDATE Person SET FirstName=p_firstname, LastName=p_lastname, Notes=p_notes, PersonalEmail=p_personalemail
+  WHERE Person.PersonID=p_personid;
 END//
 DELIMITER ;
 
@@ -179,8 +213,8 @@ DROP VIEW IF EXISTS `V_AllPeopleWithRole`;
 -- Creating temporary table to overcome VIEW dependency errors
 CREATE TABLE `V_AllPeopleWithRole` (
 	`PersonID` INT(10) UNSIGNED NOT NULL,
-	`FirstName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
-	`LastName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
+	`FirstName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`LastName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`Notes` VARCHAR(2000) NULL COMMENT 'Allergy, pereferences, other - free text' COLLATE 'utf8mb4_general_ci',
 	`FK_OrganizationID` INT(10) UNSIGNED NOT NULL,
 	`Role` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
@@ -213,11 +247,22 @@ DROP VIEW IF EXISTS `V_PersonDetails`;
 -- Creating temporary table to overcome VIEW dependency errors
 CREATE TABLE `V_PersonDetails` (
 	`PersonID` INT(10) UNSIGNED NOT NULL,
-	`FirstName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
-	`LastName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
+	`FirstName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`LastName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`Notes` VARCHAR(2000) NULL COMMENT 'Allergy, pereferences, other - free text' COLLATE 'utf8mb4_general_ci',
 	`FK_OrganizationID` INT(10) UNSIGNED NOT NULL,
 	`Role` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci'
+) ENGINE=MyISAM;
+
+-- Dumping structure for view EventMgrDB.V_ViewPeople
+DROP VIEW IF EXISTS `V_ViewPeople`;
+-- Creating temporary table to overcome VIEW dependency errors
+CREATE TABLE `V_ViewPeople` (
+	`PersonID` INT(10) UNSIGNED NOT NULL,
+	`FirstName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`LastName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`Notes` VARCHAR(2000) NULL COMMENT 'Allergy, pereferences, other - free text' COLLATE 'utf8mb4_general_ci',
+	`PersonalEmail` VARCHAR(100) NULL COMMENT 'Personal email' COLLATE 'utf8mb4_general_ci'
 ) ENGINE=MyISAM;
 
 -- Dumping structure for view EventMgrDB.V_AllPeopleWithRole
@@ -243,6 +288,12 @@ DROP VIEW IF EXISTS `V_PersonDetails`;
 -- Removing temporary table and create final VIEW structure
 DROP TABLE IF EXISTS `V_PersonDetails`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_PersonDetails` AS select `P`.`PersonID` AS `PersonID`,`P`.`FirstName` AS `FirstName`,`P`.`LastName` AS `LastName`,`P`.`Notes` AS `Notes`,`PO`.`FK_OrganizationID` AS `FK_OrganizationID`,`PO`.`Role` AS `Role` from (`Person` `P` join `PersonToOrganization` `PO` on(`P`.`PersonID` = `PO`.`FK_PersonID`)) order by 1;
+
+-- Dumping structure for view EventMgrDB.V_ViewPeople
+DROP VIEW IF EXISTS `V_ViewPeople`;
+-- Removing temporary table and create final VIEW structure
+DROP TABLE IF EXISTS `V_ViewPeople`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_ViewPeople` AS select `Person`.`PersonID` AS `PersonID`,`Person`.`FirstName` AS `FirstName`,`Person`.`LastName` AS `LastName`,`Person`.`Notes` AS `Notes`,`Person`.`PersonalEmail` AS `PersonalEmail` from `Person`;
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
