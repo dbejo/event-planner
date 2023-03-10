@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `Event` (
   PRIMARY KEY (`EventID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Event: ~0 rows (approximately)
+-- Dumping data for table EventMgrDB.Event: ~1 rows (approximately)
 DELETE FROM `Event`;
 INSERT INTO `Event` (`EventID`, `Name`, `Date`, `Location`, `Description`) VALUES
 	(1, 'DÍszvacsora 2023', '2023-03-05', NULL, NULL);
@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS `Person` (
   `LastName` varchar(100) NOT NULL DEFAULT '',
   `Notes` varchar(2000) DEFAULT NULL COMMENT 'Allergy, pereferences, other - free text',
   `PersonalEmail` varchar(100) DEFAULT NULL COMMENT 'Personal email',
-  PRIMARY KEY (`PersonID`)
+  PRIMARY KEY (`PersonID`),
+  FULLTEXT KEY `FirstName` (`FirstName`,`LastName`,`Notes`,`PersonalEmail`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table EventMgrDB.Person: ~4 rows (approximately)
