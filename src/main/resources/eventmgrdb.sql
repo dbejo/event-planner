@@ -46,9 +46,9 @@ CREATE TABLE IF NOT EXISTS `Organization` (
   PRIMARY KEY (`OrganizationID`),
   KEY `FK_Organization_Organization` (`FK_ParentOrganizationID`),
   CONSTRAINT `FK_Organization_Organization` FOREIGN KEY (`FK_ParentOrganizationID`) REFERENCES `Organization` (`OrganizationID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Organization: ~9 rows (approximately)
+-- Dumping data for table EventMgrDB.Organization: ~10 rows (approximately)
 DELETE FROM `Organization`;
 INSERT INTO `Organization` (`OrganizationID`, `Toplevel`, `Name`, `FK_ParentOrganizationID`) VALUES
 	(1, b'1', 'Belügy', NULL),
@@ -59,7 +59,8 @@ INSERT INTO `Organization` (`OrganizationID`, `Toplevel`, `Name`, `FK_ParentOrga
 	(6, b'0', 'USA', 3),
 	(7, b'0', 'Németország', 3),
 	(8, b'0', 'Igazgatóság', 5),
-	(9, b'1', 'Polgárőrség', NULL);
+	(9, b'1', 'Polgárőrség', NULL),
+	(10, b'0', 'Spanyolország', 3);
 
 -- Dumping structure for table EventMgrDB.Person
 DROP TABLE IF EXISTS `Person`;
@@ -119,6 +120,20 @@ INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`, 
 	(3, 7, 'Titkár', NULL),
 	(1, 9, 'Polgárőrparancsnok', NULL);
 
+-- Dumping structure for procedure EventMgrDB.SP_CreateOrganization
+DROP PROCEDURE IF EXISTS `SP_CreateOrganization`;
+DELIMITER //
+CREATE PROCEDURE `SP_CreateOrganization`(
+	IN `p_toplevel` bit,
+	IN `p_name` varchar(100),
+	IN `p_fkparentorgazinationid` int
+)
+BEGIN
+  INSERT INTO Organization (Toplevel, Name, FK_ParentOrganizationID)
+  VALUES (p_toplevel, p_name, p_fkparentorgazinationid);
+END//
+DELIMITER ;
+
 -- Dumping structure for procedure EventMgrDB.SP_CreatePerson
 DROP PROCEDURE IF EXISTS `SP_CreatePerson`;
 DELIMITER //
@@ -154,6 +169,48 @@ BEGIN
         SET p_result = 'User inserted successfully';
       
     END IF;
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_RelocateOrganization
+DROP PROCEDURE IF EXISTS `SP_RelocateOrganization`;
+DELIMITER //
+CREATE PROCEDURE `SP_RelocateOrganization`(
+  IN p_organizationid int unsigned,
+  IN p_fkparentorganizationid int unsigned,
+  OUT p_result VARCHAR(100)
+)
+BEGIN
+  DECLARE org_count INT;
+  DECLARE top_count INT;
+
+  SELECT COUNT(*) INTO org_count FROM Organization WHERE OrganizationID = p_fkparentorganizationid;
+  SELECT COUNT(*) INTO top_count FROM Organization WHERE OrganizationID = p_organizationid AND Toplevel = 1;
+
+  IF p_fkparentorganizationid = p_organizationid THEN
+    SET p_result = 'Error: Cannot relocate an organization to itself';
+  ELSEIF org_count = 0 THEN
+    SET p_result = 'Error: Parent organization does not exist';
+  ELSEIF top_count > 0 THEN
+    SET p_result = 'Error: Cannot relocate a top level organization';
+  ELSE
+    UPDATE Organization SET FK_ParentOrganizationID=p_fkparentorganizationid
+    WHERE Organization.OrganizationID=p_organizationid;
+    set p_result = 'Organization relocated successfully';
+  END IF;
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_UpdateOrganization
+DROP PROCEDURE IF EXISTS `SP_UpdateOrganization`;
+DELIMITER //
+CREATE PROCEDURE `SP_UpdateOrganization`(
+  IN p_organizationid int unsigned,
+  IN p_name varchar(100)
+)
+BEGIN
+  UPDATE Organization SET Name=p_name
+  WHERE Organization.OrganizationID=p_organizationid;
 END//
 DELIMITER ;
 
@@ -281,7 +338,7 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_ListUsers` AS select `u`
 DROP VIEW IF EXISTS `V_OrgPath`;
 -- Removing temporary table and create final VIEW structure
 DROP TABLE IF EXISTS `V_OrgPath`;
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_OrgPath` AS select `O4`.`OrganizationID` AS `OrganizationID`,`O4`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`,'/',`O4`.`Name`) AS `OrgPath` from (((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) join `Organization` `O4` on(`O4`.`FK_ParentOrganizationID` = `O3`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O3`.`OrganizationID` AS `OrganizationID`,`O3`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`) AS `OrgPath` from ((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O2`.`OrganizationID` AS `OrganizationID`,`O2`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`) AS `OrgPath` from (`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O1`.`OrganizationID` AS `OrganizationID`,`O1`.`Name` AS `Name`,concat(`O1`.`Name`) AS `OrgPath` from `Organization` `O1` where `O1`.`Toplevel` = 1 order by 1;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_OrgPath` AS select `O4`.`OrganizationID` AS `OrganizationID`,`O4`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`,'/',`O4`.`Name`) AS `OrgPath` from (((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) join `Organization` `O4` on(`O4`.`FK_ParentOrganizationID` = `O3`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O3`.`OrganizationID` AS `OrganizationID`,`O3`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`) AS `OrgPath` from ((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O2`.`OrganizationID` AS `OrganizationID`,`O2`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`) AS `OrgPath` from (`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O1`.`OrganizationID` AS `OrganizationID`,`O1`.`Name` AS `Name`,concat(`O1`.`Name`) AS `OrgPath` from `Organization` `O1` where `O1`.`Toplevel` = 1 order by 3,1;
 
 -- Dumping structure for view EventMgrDB.V_PersonDetails
 DROP VIEW IF EXISTS `V_PersonDetails`;
