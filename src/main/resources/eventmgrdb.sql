@@ -46,9 +46,9 @@ CREATE TABLE IF NOT EXISTS `Organization` (
   PRIMARY KEY (`OrganizationID`),
   KEY `FK_Organization_Organization` (`FK_ParentOrganizationID`),
   CONSTRAINT `FK_Organization_Organization` FOREIGN KEY (`FK_ParentOrganizationID`) REFERENCES `Organization` (`OrganizationID`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Organization: ~9 rows (approximately)
+-- Dumping data for table EventMgrDB.Organization: ~10 rows (approximately)
 DELETE FROM `Organization`;
 INSERT INTO `Organization` (`OrganizationID`, `Toplevel`, `Name`, `FK_ParentOrganizationID`) VALUES
 	(1, b'1', 'Belügy', NULL),
@@ -59,24 +59,28 @@ INSERT INTO `Organization` (`OrganizationID`, `Toplevel`, `Name`, `FK_ParentOrga
 	(6, b'0', 'USA', 3),
 	(7, b'0', 'Németország', 3),
 	(8, b'0', 'Igazgatóság', 5),
-	(9, b'1', 'Polgárőrség', NULL);
+	(9, b'1', 'Polgárőrség', NULL),
+	(10, b'0', 'Spanyolország', 3);
 
 -- Dumping structure for table EventMgrDB.Person
 DROP TABLE IF EXISTS `Person`;
 CREATE TABLE IF NOT EXISTS `Person` (
   `PersonID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `FirstName` varchar(100) DEFAULT '',
-  `LastName` varchar(100) DEFAULT '',
+  `FirstName` varchar(100) NOT NULL DEFAULT '',
+  `LastName` varchar(100) NOT NULL DEFAULT '',
   `Notes` varchar(2000) DEFAULT NULL COMMENT 'Allergy, pereferences, other - free text',
-  PRIMARY KEY (`PersonID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `PersonalEmail` varchar(100) DEFAULT NULL COMMENT 'Personal email',
+  PRIMARY KEY (`PersonID`),
+  FULLTEXT KEY `FirstName` (`FirstName`,`LastName`,`Notes`,`PersonalEmail`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table EventMgrDB.Person: ~3 rows (approximately)
+-- Dumping data for table EventMgrDB.Person: ~4 rows (approximately)
 DELETE FROM `Person`;
-INSERT INTO `Person` (`PersonID`, `FirstName`, `LastName`, `Notes`) VALUES
-	(1, 'Jakab', 'Gipsz', 'Laktózérzékeny; vegetáriánus'),
-	(2, 'Beáta', 'Nagy', 'Nem fogyaszt cukrot'),
-	(3, 'Ágnes', 'Kovács', 'Gluténérzékeny');
+INSERT INTO `Person` (`PersonID`, `FirstName`, `LastName`, `Notes`, `PersonalEmail`) VALUES
+	(1, 'Jakab', 'Gipsz', 'Laktózérzékeny; vegetáriánus', NULL),
+	(2, 'Beáta', 'Nagy', 'Nem fogyaszt cukrot', NULL),
+	(3, 'Ágnes', 'Kovács', 'Gluténérzékeny', NULL),
+	(4, 'Jolán', 'Kittinger', 'Nem fogyaszt halat', 'itt@ott');
 
 -- Dumping structure for table EventMgrDB.PersonToEvent
 DROP TABLE IF EXISTS `PersonToEvent`;
@@ -102,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `PersonToOrganization` (
   `FK_PersonID` int(10) unsigned NOT NULL,
   `FK_OrganizationID` int(10) unsigned NOT NULL,
   `Role` varchar(100) NOT NULL DEFAULT '',
+  `RoleEmail` varchar(100) DEFAULT NULL COMMENT 'Organizational email',
   KEY `FK_PersonToOrganization_Person` (`FK_PersonID`),
   KEY `FK_PersonToOrganization_Organization` (`FK_OrganizationID`),
   CONSTRAINT `FK_PersonToOrganization_Organization` FOREIGN KEY (`FK_OrganizationID`) REFERENCES `Organization` (`OrganizationID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -110,11 +115,40 @@ CREATE TABLE IF NOT EXISTS `PersonToOrganization` (
 
 -- Dumping data for table EventMgrDB.PersonToOrganization: ~4 rows (approximately)
 DELETE FROM `PersonToOrganization`;
-INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`) VALUES
-	(1, 5, 'Őrmester'),
-	(2, 6, 'Nagykövet'),
-	(3, 7, 'Titkár'),
-	(1, 9, 'Polgárőrparancsnok');
+INSERT INTO `PersonToOrganization` (`FK_PersonID`, `FK_OrganizationID`, `Role`, `RoleEmail`) VALUES
+	(1, 5, 'Őrmester', NULL),
+	(2, 6, 'Nagykövet', NULL),
+	(3, 7, 'Titkár', NULL),
+	(1, 9, 'Polgárőrparancsnok', NULL);
+
+-- Dumping structure for procedure EventMgrDB.SP_CreateOrganization
+DROP PROCEDURE IF EXISTS `SP_CreateOrganization`;
+DELIMITER //
+CREATE PROCEDURE `SP_CreateOrganization`(
+	IN `p_toplevel` bit,
+	IN `p_name` varchar(100),
+	IN `p_fkparentorgazinationid` int
+)
+BEGIN
+  INSERT INTO Organization (Toplevel, Name, FK_ParentOrganizationID)
+  VALUES (p_toplevel, p_name, p_fkparentorgazinationid);
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_CreatePerson
+DROP PROCEDURE IF EXISTS `SP_CreatePerson`;
+DELIMITER //
+CREATE PROCEDURE `SP_CreatePerson`(
+    IN p_firstname VARCHAR(100),
+    IN p_lastname VARCHAR(100),
+    IN p_notes VARCHAR(2000),
+    IN p_personalemail VARCHAR(100)
+)
+BEGIN
+  INSERT INTO Person (FirstName, LastName, Notes, PersonalEmail)
+  VALUES (p_firstname, p_lastname, p_notes, p_personalemail);
+END//
+DELIMITER ;
 
 -- Dumping structure for procedure EventMgrDB.SP_RegisterUser
 DROP PROCEDURE IF EXISTS `SP_RegisterUser`;
@@ -136,6 +170,64 @@ BEGIN
         SET p_result = 'User inserted successfully';
       
     END IF;
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_RelocateOrganization
+DROP PROCEDURE IF EXISTS `SP_RelocateOrganization`;
+DELIMITER //
+CREATE PROCEDURE `SP_RelocateOrganization`(
+  IN p_organizationid int unsigned,
+  IN p_fkparentorganizationid int unsigned,
+  OUT p_result VARCHAR(100)
+)
+BEGIN
+  DECLARE org_count INT;
+  DECLARE top_count INT;
+
+  SELECT COUNT(*) INTO org_count FROM Organization WHERE OrganizationID = p_fkparentorganizationid;
+  SELECT COUNT(*) INTO top_count FROM Organization WHERE OrganizationID = p_organizationid AND Toplevel = 1;
+
+  IF p_fkparentorganizationid = p_organizationid THEN
+    SET p_result = 'Error: Cannot relocate an organization to itself';
+  ELSEIF org_count = 0 THEN
+    SET p_result = 'Error: Parent organization does not exist';
+  ELSEIF top_count > 0 THEN
+    SET p_result = 'Error: Cannot relocate a top level organization';
+  ELSE
+    UPDATE Organization SET FK_ParentOrganizationID=p_fkparentorganizationid
+    WHERE Organization.OrganizationID=p_organizationid;
+    set p_result = 'Organization relocated successfully';
+  END IF;
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_UpdateOrganization
+DROP PROCEDURE IF EXISTS `SP_UpdateOrganization`;
+DELIMITER //
+CREATE PROCEDURE `SP_UpdateOrganization`(
+  IN p_organizationid int unsigned,
+  IN p_name varchar(100)
+)
+BEGIN
+  UPDATE Organization SET Name=p_name
+  WHERE Organization.OrganizationID=p_organizationid;
+END//
+DELIMITER ;
+
+-- Dumping structure for procedure EventMgrDB.SP_UpdatePerson
+DROP PROCEDURE IF EXISTS `SP_UpdatePerson`;
+DELIMITER //
+CREATE PROCEDURE `SP_UpdatePerson`(
+    IN p_personid INT,
+	 IN p_firstname VARCHAR(100),
+    IN p_lastname VARCHAR(100),
+    IN p_notes VARCHAR(2000),
+    IN p_personalemail VARCHAR(100)
+)
+BEGIN
+  UPDATE Person SET FirstName=p_firstname, LastName=p_lastname, Notes=p_notes, PersonalEmail=p_personalemail
+  WHERE Person.PersonID=p_personid;
 END//
 DELIMITER ;
 
@@ -179,8 +271,8 @@ DROP VIEW IF EXISTS `V_AllPeopleWithRole`;
 -- Creating temporary table to overcome VIEW dependency errors
 CREATE TABLE `V_AllPeopleWithRole` (
 	`PersonID` INT(10) UNSIGNED NOT NULL,
-	`FirstName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
-	`LastName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
+	`FirstName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`LastName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`Notes` VARCHAR(2000) NULL COMMENT 'Allergy, pereferences, other - free text' COLLATE 'utf8mb4_general_ci',
 	`FK_OrganizationID` INT(10) UNSIGNED NOT NULL,
 	`Role` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
@@ -213,11 +305,22 @@ DROP VIEW IF EXISTS `V_PersonDetails`;
 -- Creating temporary table to overcome VIEW dependency errors
 CREATE TABLE `V_PersonDetails` (
 	`PersonID` INT(10) UNSIGNED NOT NULL,
-	`FirstName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
-	`LastName` VARCHAR(100) NULL COLLATE 'utf8mb4_general_ci',
+	`FirstName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`LastName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`Notes` VARCHAR(2000) NULL COMMENT 'Allergy, pereferences, other - free text' COLLATE 'utf8mb4_general_ci',
 	`FK_OrganizationID` INT(10) UNSIGNED NOT NULL,
 	`Role` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci'
+) ENGINE=MyISAM;
+
+-- Dumping structure for view EventMgrDB.V_ViewPeople
+DROP VIEW IF EXISTS `V_ViewPeople`;
+-- Creating temporary table to overcome VIEW dependency errors
+CREATE TABLE `V_ViewPeople` (
+	`PersonID` INT(10) UNSIGNED NOT NULL,
+	`FirstName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`LastName` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_general_ci',
+	`Notes` VARCHAR(2000) NULL COMMENT 'Allergy, pereferences, other - free text' COLLATE 'utf8mb4_general_ci',
+	`PersonalEmail` VARCHAR(100) NULL COMMENT 'Personal email' COLLATE 'utf8mb4_general_ci'
 ) ENGINE=MyISAM;
 
 -- Dumping structure for view EventMgrDB.V_AllPeopleWithRole
@@ -236,13 +339,19 @@ CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_ListUsers` AS select `u`
 DROP VIEW IF EXISTS `V_OrgPath`;
 -- Removing temporary table and create final VIEW structure
 DROP TABLE IF EXISTS `V_OrgPath`;
-CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_OrgPath` AS select `O4`.`OrganizationID` AS `OrganizationID`,`O4`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`,'/',`O4`.`Name`) AS `OrgPath` from (((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) join `Organization` `O4` on(`O4`.`FK_ParentOrganizationID` = `O3`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O3`.`OrganizationID` AS `OrganizationID`,`O3`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`) AS `OrgPath` from ((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O2`.`OrganizationID` AS `OrganizationID`,`O2`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`) AS `OrgPath` from (`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O1`.`OrganizationID` AS `OrganizationID`,`O1`.`Name` AS `Name`,concat(`O1`.`Name`) AS `OrgPath` from `Organization` `O1` where `O1`.`Toplevel` = 1 order by 1;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_OrgPath` AS select `O4`.`OrganizationID` AS `OrganizationID`,`O4`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`,'/',`O4`.`Name`) AS `OrgPath` from (((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) join `Organization` `O4` on(`O4`.`FK_ParentOrganizationID` = `O3`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O3`.`OrganizationID` AS `OrganizationID`,`O3`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`,'/',`O3`.`Name`) AS `OrgPath` from ((`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) join `Organization` `O3` on(`O3`.`FK_ParentOrganizationID` = `O2`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O2`.`OrganizationID` AS `OrganizationID`,`O2`.`Name` AS `Name`,concat(`O1`.`Name`,'/',`O2`.`Name`) AS `OrgPath` from (`Organization` `O1` join `Organization` `O2` on(`O2`.`FK_ParentOrganizationID` = `O1`.`OrganizationID`)) where `O1`.`Toplevel` = 1 union select `O1`.`OrganizationID` AS `OrganizationID`,`O1`.`Name` AS `Name`,concat(`O1`.`Name`) AS `OrgPath` from `Organization` `O1` where `O1`.`Toplevel` = 1 order by 3,1;
 
 -- Dumping structure for view EventMgrDB.V_PersonDetails
 DROP VIEW IF EXISTS `V_PersonDetails`;
 -- Removing temporary table and create final VIEW structure
 DROP TABLE IF EXISTS `V_PersonDetails`;
 CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_PersonDetails` AS select `P`.`PersonID` AS `PersonID`,`P`.`FirstName` AS `FirstName`,`P`.`LastName` AS `LastName`,`P`.`Notes` AS `Notes`,`PO`.`FK_OrganizationID` AS `FK_OrganizationID`,`PO`.`Role` AS `Role` from (`Person` `P` join `PersonToOrganization` `PO` on(`P`.`PersonID` = `PO`.`FK_PersonID`)) order by 1;
+
+-- Dumping structure for view EventMgrDB.V_ViewPeople
+DROP VIEW IF EXISTS `V_ViewPeople`;
+-- Removing temporary table and create final VIEW structure
+DROP TABLE IF EXISTS `V_ViewPeople`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_ViewPeople` AS select `Person`.`PersonID` AS `PersonID`,`Person`.`FirstName` AS `FirstName`,`Person`.`LastName` AS `LastName`,`Person`.`Notes` AS `Notes`,`Person`.`PersonalEmail` AS `PersonalEmail` from `Person`;
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
