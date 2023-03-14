@@ -28,6 +28,7 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .message("User has been successfully registered")
                 .build();
     }
 
@@ -37,6 +38,7 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .message("User has been successfully authenticated")
                 .build();
     }
 }
