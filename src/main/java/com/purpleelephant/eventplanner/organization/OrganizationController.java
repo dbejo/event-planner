@@ -1,10 +1,6 @@
 package com.purpleelephant.eventplanner.organization;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.models.annotations.OpenAPI30;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/organization")
 @RequiredArgsConstructor
@@ -21,8 +18,7 @@ public class OrganizationController {
 
     @Operation(
             summary = "Get all organization",
-            tags = { "organization" },
-            security = {@SecurityRequirement(name="BearerJWT")}
+            tags = {"organization"}
     )
     @GetMapping("/all")
     public ResponseEntity<Collection<Organization>> getAll() {
@@ -30,9 +26,8 @@ public class OrganizationController {
     }
 
     @Operation(
-        summary = "Get an organization by ID",
-        tags = { "organization" },
-        security = {@SecurityRequirement(name="BearerJWT")}
+            summary = "Get an organization by ID",
+            tags = {"organization"}
     )
     @GetMapping("/{id}")
     public ResponseEntity<Organization> getOrganizationById(@PathVariable String id) {
@@ -42,8 +37,7 @@ public class OrganizationController {
 
     @Operation(
             summary = "Add an organization",
-            tags = { "organization" },
-            security = {@SecurityRequirement(name="BearerJWT")}
+            tags = {"organization"}
     )
     @PostMapping
     public ResponseEntity<Organization> add(@RequestBody Organization organization) {
@@ -52,18 +46,21 @@ public class OrganizationController {
 
     @Operation(
             summary = "Modify an organization",
-            tags = { "organization" },
-            security = {@SecurityRequirement(name="BearerJWT")}
+            tags = {"organization"}
     )
     @PutMapping
-    public ResponseEntity<Organization> modify(@RequestBody Organization organization) throws Exception {
-        return ResponseEntity.ok(organizationService.modify(organization));
+    public ResponseEntity<Organization> modify(@RequestBody Organization organization) {
+        try {
+            return ResponseEntity.ok(organizationService.modify(organization));
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            return ResponseEntity.badRequest().body(organization);
+        }
     }
 
     @Operation(
-        summary = "Delete an organization",
-        tags = { "organization" },
-        security = {@SecurityRequirement(name="BearerJWT")}
+            summary = "Delete an organization",
+            tags = {"organization"}
     )
     @DeleteMapping
     public ResponseEntity<Organization> delete(@RequestBody Organization organization) {
