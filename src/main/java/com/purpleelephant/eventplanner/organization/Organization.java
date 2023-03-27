@@ -1,5 +1,6 @@
 package com.purpleelephant.eventplanner.organization;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.purpleelephant.eventplanner.person.Person;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -7,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.util.Collection;
 
 @Data
 @Builder
@@ -25,8 +26,10 @@ public class Organization {
 
     private Boolean active;
     private String address;
-    @ManyToMany(mappedBy = "organizations")
-    private Set<Person> people;
-    @ManyToOne
+    @JsonManagedReference
+    @ManyToMany(mappedBy = "organizations", fetch = FetchType.LAZY)
+    private Collection<Person> people;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Organization parent;
 }

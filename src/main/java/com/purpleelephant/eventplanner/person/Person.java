@@ -1,5 +1,6 @@
 package com.purpleelephant.eventplanner.person;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.purpleelephant.eventplanner.event.Event;
 import com.purpleelephant.eventplanner.organization.Organization;
 import jakarta.persistence.*;
@@ -8,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.util.Collection;
 
 @Data
 @Builder
@@ -25,9 +26,11 @@ public class Person {
     private String notes;
     private String personalEmail;
     private Boolean active;
-    @ManyToMany
+    @JsonBackReference
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "person_to_organization", joinColumns = @JoinColumn(name = "person_id"), inverseJoinColumns = @JoinColumn(name = "organization_id"))
-    private Set<Organization> organizations;
-    @ManyToMany(mappedBy = "people")
-    private Set<Event> events;
+    private Collection<Organization> organizations;
+    @JsonBackReference
+    @ManyToMany(mappedBy = "people", fetch = FetchType.LAZY)
+    private Collection<Event> events;
 }
