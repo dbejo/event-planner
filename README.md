@@ -1,4 +1,5 @@
 # Event planner
+[![CodeFactor](https://www.codefactor.io/repository/github/dbejo/event-planner/badge/main)](https://www.codefactor.io/repository/github/dbejo/event-planner/overview/main)
 ## Get started
 
 * Start a MySQL database. I used [XAMPP](https://www.apachefriends.org/hu/index.html) for this
