@@ -1,6 +1,7 @@
 package com.purpleelephant.eventplanner.event;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.purpleelephant.eventplanner.person.Person;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,7 @@ public class Event {
     private Date date;
     private Boolean active;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @JsonManagedReference
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable
