@@ -1,4 +1,4 @@
-package com.purpleelephant.eventplanner.organization;
+package com.purpleelephant.eventplanner.event;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Date;
 import java.util.Collection;
 
 @Data
@@ -17,23 +18,19 @@ import java.util.Collection;
 @AllArgsConstructor
 @Entity
 @Table
-public class Organization {
-
+public class Event {
     @Id
     @GeneratedValue
     private Integer id;
-    private Boolean topLevel;
     private String name;
-
+    private String description;
+    private String location;
+    private Date date;
     private Boolean active;
-    private String address;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @JsonManagedReference
-    @ManyToMany(mappedBy = "organizations", fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable
     private Collection<Person> people;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Organization parent;
 }
