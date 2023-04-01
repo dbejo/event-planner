@@ -33,7 +33,7 @@ public class OrganizationController {
     )
     @GetMapping("/{id}")
     public ResponseEntity<Organization> getOrganizationById(@PathVariable Integer id) {
-        //TODO
+        //TODO: change return type
         return ResponseEntity.ok(organizationService.findById(id).orElseThrow());
     }
 
@@ -43,7 +43,7 @@ public class OrganizationController {
     )
     @PostMapping
     public ResponseEntity<Organization> add(@RequestBody Organization organization) {
-        //TODO
+        //TODO: change return type
         return ResponseEntity.ok(organizationService.create(organization));
     }
 
@@ -53,7 +53,7 @@ public class OrganizationController {
     )
     @PutMapping
     public ResponseEntity<Organization> modify(@RequestBody Organization organization) {
-        //TODO
+        //TODO: change return type
         try {
             return ResponseEntity.ok(organizationService.modify(organization));
         } catch (Exception e) {
