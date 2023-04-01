@@ -32,7 +32,6 @@ public class EventController {
     )
     @PostMapping
     public ResponseEntity<Event> add(@RequestBody Event event) {
-        //TODO
         return ResponseEntity.ok(eventService.create(event));
     }
 
@@ -42,7 +41,6 @@ public class EventController {
     )
     @PutMapping
     public ResponseEntity<Event> modify(@RequestBody Event event) {
-        //TODO
         try {
             return ResponseEntity.ok(eventService.modify(event));
         } catch (Exception e) {
