@@ -26,8 +26,6 @@ import java.util.List;
         info = @io.swagger.v3.oas.annotations.info.Info(title = "Event Planner API", version = "v1"),
         servers = @io.swagger.v3.oas.annotations.servers.Server(url = "http://localhost:8080")
 )
-
-@SecurityScheme(name = "BearerJWT", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class EventPlannerApplication {
 
     public static void main(String[] args) {

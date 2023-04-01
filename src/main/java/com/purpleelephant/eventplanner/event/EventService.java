@@ -31,13 +31,9 @@ public class EventService {
         return eventRepository.findAll();
     }
 
-    public Event delete(Event event) throws Exception {
-        if (event.getId() == null) {
-            log.info("Event id missing");
-            throw new Exception("Set event id for modification");
-        }
-        log.info("Delete {} event", event.getName());
+    public void delete(int id) {
+        Event event = eventRepository.findById(id).orElseThrow();
         eventRepository.deleteById(event.getId());
-        return event;
+        log.info("{} event deleted", event.getName());
     }
 }
