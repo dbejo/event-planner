@@ -33,7 +33,13 @@ public class OrganizationService {
         return organizationRepository.save(organization);
     }
 
-    public Optional<Organization> findById(String id) {
-        return organizationRepository.findById(Integer.valueOf(id));
+    public Optional<Organization> findById(Integer id) {
+        return organizationRepository.findById(id);
+    }
+
+    public void delete(int id) {
+        Organization organization = organizationRepository.findById(id).orElseThrow();
+        organizationRepository.deleteById(organization.getId());
+        log.info("{} organization deleted", organization.getName());
     }
 }

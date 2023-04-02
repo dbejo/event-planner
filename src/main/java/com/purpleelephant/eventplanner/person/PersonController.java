@@ -1,5 +1,6 @@
 package com.purpleelephant.eventplanner.person;
 
+import com.purpleelephant.eventplanner.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -24,8 +27,8 @@ public class PersonController {
     )
     @ApiResponse(responseCode = "200", description = "Get all people")
     @GetMapping("/all")
-    public ResponseEntity<Collection<Person>> getAll() {
-        return ResponseEntity.ok(personRepository.findAll());
+    public ResponseEntity<Response> getAll() {
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("people", personRepository.findAll())).build());
     }
 
     @Operation(
@@ -35,6 +38,11 @@ public class PersonController {
     @GetMapping("/{id}")
     public ResponseEntity<Person> getPersonById(@PathVariable String id) {
         return ResponseEntity.ok(personService.findById(id).orElseThrow());
+    }
+
+    @GetMapping("/{id}/events")
+    public ResponseEntity<Response> getEventsWherePersonInvited(@PathVariable Integer id) {
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("events", personService.findEventsByPersonId(id))).build());
     }
 
     @Operation(
@@ -54,7 +62,7 @@ public class PersonController {
             tags = {"person"}
     )
     @GetMapping("/organization/{id}")
-    public ResponseEntity<Collection<Person>> getPeopleByOrganization(@PathVariable String id) {
+    public ResponseEntity<Collection<Person>> getPeopleByOrganization(@PathVariable Integer id) {
         return ResponseEntity.ok(personService.findByOrganizationId(id));
     }
 
@@ -85,9 +93,8 @@ public class PersonController {
             summary = "Delete a person",
             tags = {"person"}
     )
-    @DeleteMapping
-    public ResponseEntity<Person> delete(@RequestBody Person person) {
-        personRepository.deleteById(person.getId());
-        return ResponseEntity.ok(person);
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Integer id) {
+        personService.delete(id);
     }
 }

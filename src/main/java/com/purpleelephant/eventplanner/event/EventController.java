@@ -1,12 +1,14 @@
 package com.purpleelephant.eventplanner.event;
 
+import com.purpleelephant.eventplanner.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -20,8 +22,8 @@ public class EventController {
             tags = {"event"}
     )
     @GetMapping("/all")
-    public ResponseEntity<Collection<Event>> getAll() {
-        return ResponseEntity.ok(eventService.getEvents());
+    public ResponseEntity<Response> getAll() {
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("events", eventService.getEvents())).build());
     }
 
     @Operation(
@@ -51,13 +53,9 @@ public class EventController {
             summary = "Delete an event",
             tags = {"event"}
     )
-    @DeleteMapping
-    public ResponseEntity<Event> delete(@RequestBody Event event) {
-        try {
-            return ResponseEntity.ok(eventService.delete(event));
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return ResponseEntity.badRequest().body(event);
-        }
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Integer id) {
+        log.info("Delete event with {} id", id);
+        eventService.delete(id);
     }
 }
