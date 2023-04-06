@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -72,6 +73,17 @@ public class OrganizationServiceTest {
         verify(organizationRepository, times(1)).save(any(Organization.class));
     }
 
+/*    @Test
+    public void modify_shouldThrowExceptionIfIdIsNull() {
+        Organization organization = new Organization();
+        organization.setName("Test Organization");
+
+        assertDoesNotThrow(() -> {
+            organizationService.modify(organization);
+        });
+
+        verify(organizationRepository, never()).save(any(Organization.class));
+    }*/
 
     @Test
     public void modify_shouldSaveOrganization() throws Exception {
