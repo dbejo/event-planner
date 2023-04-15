@@ -17,11 +17,7 @@ public class EventService {
         return eventRepository.save(new Event(null, event.getName(), event.getDescription(), event.getLocation(), event.getDate(), event.getActive(), event.getPeople()));
     }
 
-    public Event modify(Event event) throws Exception {
-        if (event.getId() == null) {
-            log.info("Event id missing");
-            throw new Exception("Set event id for modification");
-        }
+    public Event modify(Event event) {
         log.info("Modify {} event", event.getName());
         return eventRepository.save(event);
     }

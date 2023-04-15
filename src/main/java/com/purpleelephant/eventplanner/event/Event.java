@@ -1,6 +1,6 @@
 package com.purpleelephant.eventplanner.event;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.purpleelephant.eventplanner.person.Person;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,6 +17,7 @@ import java.util.Collection;
 @AllArgsConstructor
 @Entity
 @Table
+@JsonIgnoreProperties({"hibernateLazyInitializer", "people"})
 public class Event {
     @Id
     @GeneratedValue
@@ -27,7 +28,7 @@ public class Event {
     private Date date;
     private Boolean active;
 
-    @JsonManagedReference
+    @JsonIgnoreProperties({"events", "organizations"})
     @ManyToMany(fetch = FetchType.LAZY)
     private Collection<Person> people;
 }

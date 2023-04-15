@@ -31,8 +31,8 @@ public class EventController {
             tags = {"event"}
     )
     @PostMapping
-    public ResponseEntity<Event> add(@RequestBody Event event) {
-        return ResponseEntity.ok(eventService.create(event));
+    public ResponseEntity<Response> add(@RequestBody Event event) {
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("event", eventService.create(event))).build());
     }
 
     @Operation(
@@ -40,13 +40,8 @@ public class EventController {
             tags = {"event"}
     )
     @PutMapping
-    public ResponseEntity<Event> modify(@RequestBody Event event) {
-        try {
-            return ResponseEntity.ok(eventService.modify(event));
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return ResponseEntity.badRequest().body(event);
-        }
+    public ResponseEntity<Response> modify(@RequestBody Event event) {
+            return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("event", eventService.modify(event))).build());
     }
 
     @Operation(
