@@ -25,8 +25,15 @@ public class OrganizationService {
     }
 
     public Organization modify(AddModifyOrgRequest request) {
-        Organization parentOrg = organizationRepository.findById(request.getParentOrg().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Parent organization not found"));
+        Organization parentOrg;
+        if (request.getParentOrg().getId() == null) {
+            request.setTopLevel(true);
+            parentOrg = null;
+        } else {
+            request.setTopLevel(false);
+            parentOrg = organizationRepository.findById(request.getParentOrg().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Parent organization not found"));
+        }
         Organization org = new Organization(request.getId(), request.getTopLevel(), request.getName(), request.getActive(), request.getAddress(), request.getPeople(), parentOrg);
         log.info("Modify {} organization", request.getName());
         return organizationRepository.save(org);
