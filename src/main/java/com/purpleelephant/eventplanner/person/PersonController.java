@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -25,8 +24,8 @@ public class PersonController {
     )
     @ApiResponse(responseCode = "200", description = "Get all people")
     @GetMapping("/all")
-    public ResponseEntity<Response> getAll() {
-        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("people", personRepository.findAll())).build());
+    public Response getAll() {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("people", personRepository.findAll())).build();
     }
 
     @Operation(
@@ -34,8 +33,8 @@ public class PersonController {
             tags = {"person"}
     )
     @PostMapping
-    public ResponseEntity<Response> add(@RequestBody Person person) {
-        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("person", personService.create(person))).build());
+    public Response add(@RequestBody Person person) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("person", personService.create(person))).build();
     }
 
     @Operation(
@@ -43,8 +42,8 @@ public class PersonController {
             tags = {"person"}
     )
     @PutMapping
-    public ResponseEntity<Response> modify(@RequestBody Person person) {
-        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("person", personService.modify(person))).build());
+    public Response modify(@RequestBody Person person) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("person", personService.modify(person))).build();
     }
 
     @Operation(

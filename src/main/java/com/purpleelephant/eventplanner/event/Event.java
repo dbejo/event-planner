@@ -17,7 +17,6 @@ import java.util.Collection;
 @AllArgsConstructor
 @Entity
 @Table
-@JsonIgnoreProperties({"hibernateLazyInitializer", "people"})
 public class Event {
     @Id
     @GeneratedValue

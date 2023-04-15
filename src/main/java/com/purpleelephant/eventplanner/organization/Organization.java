@@ -16,7 +16,6 @@ import java.util.Collection;
 @AllArgsConstructor
 @Entity
 @Table
-@JsonIgnoreProperties({"hibernateLazyInitializer", "people"})
 public class Organization {
 
     @Id
@@ -28,11 +27,16 @@ public class Organization {
     private Boolean active;
     private String address;
 
-    @JsonIgnoreProperties("organizations")
+    public Organization(Integer id) {
+        this.id = id;
+    }
+
+    @JsonIgnoreProperties({"organizations", "events"})
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable
     private Collection<Person> people;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("people")
+    @ManyToOne(fetch = FetchType.EAGER)
     private Organization parent;
 }

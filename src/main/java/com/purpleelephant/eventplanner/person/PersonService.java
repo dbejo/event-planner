@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -44,30 +47,66 @@ public class PersonService {
 
     public void delete(int id) {
         Person person = personRepository.findById(id).orElseThrow();
+        eventRepository.findAll().forEach(e -> {
+            if (e.getPeople().contains(person))
+                throw new RuntimeException("Cannot delete person because they are assigned to an event");
+        });
+        organizationRepository.findAll().forEach(o -> {
+            if (o.getPeople().contains(person))
+                throw new RuntimeException("Cannot delete person because they are assigned to an organization");
+        });
         personRepository.deleteById(person.getId());
         log.info("{} {} person deleted", person.getFirstName(), person.getLastName());
     }
 
     public void addPersonToOrganizations(Person person, Collection<Organization> organizations) {
+        List<Organization> orgsToRemoveFrom = new ArrayList<>();
+        organizationRepository.findAll().forEach(org -> {
+            if (org.getPeople() != null) {
+                Iterator<Person> iterator = org.getPeople().iterator();
+                while (iterator.hasNext()) {
+                    Person p = iterator.next();
+                    if (p.getId().equals(person.getId())) {
+                        iterator.remove();
+                        orgsToRemoveFrom.add(org);
+                    }
+                }
+            }
+        });
+        orgsToRemoveFrom.forEach(organizationRepository::save);
         for (Organization org : organizations) {
             organizationRepository.findById(org.getId()).ifPresent(organization -> {
                 Collection<Person> orgPeople = organization.getPeople();
-                if(!orgPeople.contains(person)) {
+                if (!orgPeople.contains(person)) {
                     orgPeople.add(person);
-                    organizationRepository.save(organization);
                 }
+                organizationRepository.save(organization);
             });
         }
     }
 
     public void addPersonToEvents(Person person, Collection<Event> events) {
+        List<Event> eventsToRemoveFrom = new ArrayList<>();
+        eventRepository.findAll().forEach(e -> {
+            if (e.getPeople() != null) {
+                Iterator<Person> iterator = e.getPeople().iterator();
+                while (iterator.hasNext()) {
+                    Person p = iterator.next();
+                    if (p.getId().equals(person.getId())) {
+                        iterator.remove();
+                        eventsToRemoveFrom.add(e);
+                    }
+                }
+            }
+        });
+        eventsToRemoveFrom.forEach(eventRepository::save);
         for (Event event : events) {
             eventRepository.findById(event.getId()).ifPresent(e -> {
                 Collection<Person> eventPeople = e.getPeople();
-                if(!eventPeople.contains(person)) {
+                if (!eventPeople.contains(person)) {
                     eventPeople.add(person);
-                    eventRepository.save(e);
                 }
+                eventRepository.save(e);
             });
         }
     }
