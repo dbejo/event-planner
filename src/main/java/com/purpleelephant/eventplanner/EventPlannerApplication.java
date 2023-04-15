@@ -7,8 +7,6 @@ import com.purpleelephant.eventplanner.organization.OrganizationRepository;
 import com.purpleelephant.eventplanner.person.Person;
 import com.purpleelephant.eventplanner.person.PersonRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,17 +33,17 @@ public class EventPlannerApplication {
     @Bean
     CommandLineRunner run(OrganizationRepository organizationRepository, PersonRepository personRepository, EventRepository eventRepository) {
         return args -> {
-            organizationRepository.save(new Organization(null, true, "Vezetes", true, "Putypurutty utca 2", null, null));
+            personRepository.save(new Person(null, "Giga", "Chad", "Top CEO", "email1@email.com", true, null, null));
+            personRepository.save(new Person(null, "Komoly", "Janos", "Nem komoly", "email2@email.com", true, null, null));
+            personRepository.save(new Person(null, "Kis", "Juliska", "Kis titkarno", "email3@email.com", true, null, null));
+            personRepository.save(new Person(null, "Nagy", "Marcsi", "Nagy titkarno", "email4@email.com", true, null, null));
+            personRepository.save(new Person(null, "Takker", "Neni1", "Top level takaritoneni", "email5@email.com", true, null, null));
+            personRepository.save(new Person(null, "Takker", "Neni2", "Gyakornok takker neni", "email6@email.com", true, null, null));
+
+            organizationRepository.save(new Organization(null, true, "Vezetes", true, "Putypurutty utca 2", List.of(new Person(1, null, null, null, null, null, null, null), new Person(2, null, null, null, null, null, null, null)), null));
             organizationRepository.save(new Organization(null, false, "Al-osztaly 1", true, "Putypurutty utca 2", null, new Organization(1, null, null, null, null, null, null)));
             organizationRepository.save(new Organization(null, false, "Al-osztaly 2", true, "Putypurutty utca 2", null, new Organization(1, null, null, null, null, null, null)));
             organizationRepository.save(new Organization(null, false, "Takaritok", true, "Putypurutty utca 2", null, new Organization(2, null, null, null, null, null, null)));
-
-            personRepository.save(new Person(null, "Giga", "Chad", "Top CEO", "email1@email.com", true, List.of(new Organization(1, null, null, null, null, null, null)), null));
-            personRepository.save(new Person(null, "Komoly", "Janos", "Nem komoly", "email2@email.com", true, List.of(new Organization(1, null, null, null, null, null, null)), null));
-            personRepository.save(new Person(null, "Kis", "Juliska", "Kis titkarno", "email3@email.com", true, List.of(new Organization(2, null, null, null, null, null, null)), null));
-            personRepository.save(new Person(null, "Nagy", "Marcsi", "Nagy titkarno", "email4@email.com", true, List.of(new Organization(3, null, null, null, null, null, null)), null));
-            personRepository.save(new Person(null, "Takker", "Neni1", "Top level takaritoneni", "email5@email.com", true, List.of(new Organization(4, null, null, null, null, null, null)), null));
-            personRepository.save(new Person(null, "Takker", "Neni2", "Gyakornok takker neni", "email6@email.com", true, List.of(new Organization(4, null, null, null, null, null, null)), null));
 
             eventRepository.save(new Event(null, "Kajalas a fonivel", "Lesz sok kaja gyertek", "McDonalds", Date.valueOf(LocalDate.now()), true,
                     List.of(new Person(1, null, null, null, null, null, null, null),
