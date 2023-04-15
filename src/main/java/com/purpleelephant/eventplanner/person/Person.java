@@ -1,6 +1,6 @@
 package com.purpleelephant.eventplanner.person;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.purpleelephant.eventplanner.event.Event;
 import com.purpleelephant.eventplanner.organization.Organization;
 import jakarta.persistence.*;
@@ -27,12 +27,11 @@ public class Person {
     private String personalEmail;
     private Boolean active;
 
-    @JsonBackReference
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable
+    @JsonIgnoreProperties("people")
+    @ManyToMany(mappedBy = "people", fetch = FetchType.LAZY)
     private Collection<Organization> organizations;
 
-    @JsonBackReference
+    @JsonIgnoreProperties("people")
     @ManyToMany(mappedBy = "people", fetch = FetchType.LAZY)
     private Collection<Event> events;
 }
