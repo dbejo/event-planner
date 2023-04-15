@@ -1,6 +1,6 @@
 package com.purpleelephant.eventplanner.organization;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.purpleelephant.eventplanner.person.Person;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,6 +16,7 @@ import java.util.Collection;
 @AllArgsConstructor
 @Entity
 @Table
+@JsonIgnoreProperties({"hibernateLazyInitializer", "people"})
 public class Organization {
 
     @Id
@@ -27,8 +28,9 @@ public class Organization {
     private Boolean active;
     private String address;
 
-    @JsonManagedReference
-    @ManyToMany(mappedBy = "organizations", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("organizations")
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable
     private Collection<Person> people;
 
     @ManyToOne(fetch = FetchType.LAZY)

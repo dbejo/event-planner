@@ -27,13 +27,11 @@ public class OrganizationController {
         return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organizations", organizationRepository.findAll())).build());
     }
 
-    @Operation(
-            summary = "Get an organization by ID",
-            tags = {"organization"}
-    )
     @GetMapping("/{id}")
-    public ResponseEntity<Organization> getOrganizationById(@PathVariable Integer id) {
-        return ResponseEntity.ok(organizationService.findById(id).orElseThrow());
+    public ResponseEntity<Response> get(@PathVariable Integer id) {
+        OrganizationDTO organizationDTO = organizationService.getOrganizationById(id);
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now())
+                .data(Map.of("organization", organizationDTO)).build());
     }
 
     @Operation(
@@ -41,8 +39,8 @@ public class OrganizationController {
             tags = {"organization"}
     )
     @PostMapping
-    public ResponseEntity<Organization> add(@RequestBody Organization organization) {
-        return ResponseEntity.ok(organizationService.create(organization));
+    public ResponseEntity<Response> add(@RequestBody Organization organization) {
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organization", organizationService.create(organization))).build());
     }
 
     @Operation(
@@ -50,13 +48,8 @@ public class OrganizationController {
             tags = {"organization"}
     )
     @PutMapping
-    public ResponseEntity<Organization> modify(@RequestBody Organization organization) {
-        try {
-            return ResponseEntity.ok(organizationService.modify(organization));
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return ResponseEntity.badRequest().body(organization);
-        }
+    public ResponseEntity<Response> modify(@RequestBody Organization organization) {
+        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organization", organizationService.modify(organization))).build());
     }
 
     @Operation(

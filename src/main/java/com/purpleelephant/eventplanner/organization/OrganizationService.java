@@ -1,10 +1,13 @@
 package com.purpleelephant.eventplanner.organization;
 
+import com.purpleelephant.eventplanner.person.Person;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,17 +27,31 @@ public class OrganizationService {
         return organizationRepository.save(organization);
     }
 
-    public Organization modify(Organization organization) throws Exception {
-        if (organization.getId() == null) {
-            log.info("Event id missing");
-            throw new Exception("Set organization id for modification");
+    public OrganizationDTO getOrganizationById(Integer id) {
+        Organization organization = organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+        List<Integer> peopleIds = new ArrayList<>();
+        if (organization.getPeople() != null) {
+            peopleIds = organization.getPeople().stream().map(Person::getId).collect(Collectors.toList());
         }
-        log.info("Modify {} organization", organization.getName());
-        return organizationRepository.save(organization);
+        Integer parentId = null;
+        if (organization.getParent() != null) {
+            parentId = organization.getParent().getId();
+        }
+        return OrganizationDTO.builder()
+                .id(organization.getId())
+                .name(organization.getName())
+                .parentId(parentId)
+                .topLevel(organization.getTopLevel())
+                .address(organization.getAddress())
+                .peopleIds(peopleIds)
+                .active(organization.getActive())
+                .build();
     }
 
-    public Optional<Organization> findById(Integer id) {
-        return organizationRepository.findById(id);
+    public Organization modify(Organization organization) {
+        log.info("Modify {} organization", organization.getName());
+        return organizationRepository.save(organization);
     }
 
     public void delete(int id) {
