@@ -1,10 +1,10 @@
 package com.purpleelephant.eventplanner.organization;
 
 import com.purpleelephant.eventplanner.Response;
+import com.purpleelephant.eventplanner.organization.model.AddModifyOrgRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,17 +23,8 @@ public class OrganizationController {
             tags = {"organization"}
     )
     @GetMapping("/all")
-    public ResponseEntity<Response> getAll() {
-        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organizations", organizationRepository.findAll())).build());
-    }
-
-    @Operation(
-            summary = "Get an organization by ID",
-            tags = {"organization"}
-    )
-    @GetMapping("/{id}")
-    public ResponseEntity<Organization> getOrganizationById(@PathVariable Integer id) {
-        return ResponseEntity.ok(organizationService.findById(id).orElseThrow());
+    public Response getAll() {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organizations", organizationRepository.findAll())).build();
     }
 
     @Operation(
@@ -41,8 +32,8 @@ public class OrganizationController {
             tags = {"organization"}
     )
     @PostMapping
-    public ResponseEntity<Organization> add(@RequestBody Organization organization) {
-        return ResponseEntity.ok(organizationService.create(organization));
+    public Response add(@RequestBody AddModifyOrgRequest request) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organization", organizationService.create(request))).build();
     }
 
     @Operation(
@@ -50,13 +41,8 @@ public class OrganizationController {
             tags = {"organization"}
     )
     @PutMapping
-    public ResponseEntity<Organization> modify(@RequestBody Organization organization) {
-        try {
-            return ResponseEntity.ok(organizationService.modify(organization));
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return ResponseEntity.badRequest().body(organization);
-        }
+    public Response modify(@RequestBody AddModifyOrgRequest request) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organization", organizationService.modify(request))).build();
     }
 
     @Operation(

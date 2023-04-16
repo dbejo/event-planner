@@ -1,6 +1,6 @@
 package com.purpleelephant.eventplanner.organization;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.purpleelephant.eventplanner.person.Person;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,10 +27,16 @@ public class Organization {
     private Boolean active;
     private String address;
 
-    @JsonManagedReference
-    @ManyToMany(mappedBy = "organizations", fetch = FetchType.LAZY)
+    public Organization(Integer id) {
+        this.id = id;
+    }
+
+    @JsonIgnoreProperties({"organizations", "events"})
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable
     private Collection<Person> people;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("people")
+    @ManyToOne(fetch = FetchType.EAGER)
     private Organization parent;
 }

@@ -4,7 +4,6 @@ import com.purpleelephant.eventplanner.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -22,8 +21,8 @@ public class EventController {
             tags = {"event"}
     )
     @GetMapping("/all")
-    public ResponseEntity<Response> getAll() {
-        return ResponseEntity.ok(Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("events", eventService.getEvents())).build());
+    public Response getAll() {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("events", eventService.getEvents())).build();
     }
 
     @Operation(
@@ -31,8 +30,8 @@ public class EventController {
             tags = {"event"}
     )
     @PostMapping
-    public ResponseEntity<Event> add(@RequestBody Event event) {
-        return ResponseEntity.ok(eventService.create(event));
+    public Response add(@RequestBody Event event) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("event", eventService.create(event))).build();
     }
 
     @Operation(
@@ -40,13 +39,8 @@ public class EventController {
             tags = {"event"}
     )
     @PutMapping
-    public ResponseEntity<Event> modify(@RequestBody Event event) {
-        try {
-            return ResponseEntity.ok(eventService.modify(event));
-        } catch (Exception e) {
-            log.info(e.getMessage());
-            return ResponseEntity.badRequest().body(event);
-        }
+    public Response modify(@RequestBody Event event) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("event", eventService.modify(event))).build();
     }
 
     @Operation(
