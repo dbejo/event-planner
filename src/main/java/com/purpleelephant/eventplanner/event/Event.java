@@ -8,7 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Date;
+
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Data
@@ -24,8 +25,10 @@ public class Event {
     private String name;
     private String description;
     private String location;
-    private Date date;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
     private Boolean active;
+    private String agenda;
 
     @JsonIgnoreProperties({"events", "organizations"})
     @ManyToMany(fetch = FetchType.LAZY)
