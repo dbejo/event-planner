@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -46,5 +49,9 @@ public class OrganizationService {
         }
         organizationRepository.deleteById(organization.getId());
         log.info("{} organization deleted", organization.getName());
+    }
+
+    public Collection<Organization> getByPerson(Integer id) {
+        return organizationRepository.findAll().stream().filter(organization -> organization.getPeople().stream().anyMatch(person -> person.getId().equals(id))).collect(Collectors.toList());
     }
 }

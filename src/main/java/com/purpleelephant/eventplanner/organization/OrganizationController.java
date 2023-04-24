@@ -53,4 +53,13 @@ public class OrganizationController {
     public void delete(@PathVariable Integer id) {
         organizationService.delete(id);
     }
+
+    @Operation(
+            summary = "Get organization by person",
+            tags = {"organization"}
+    )
+    @GetMapping("/person/{id}")
+    public Response getByPerson(@PathVariable Integer id) {
+        return Response.builder().timeStamp(LocalDateTime.now()).data(Map.of("organizations", organizationService.getByPerson(id))).build();
+    }
 }
