@@ -17,6 +17,7 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @SpringBootApplication
@@ -45,11 +46,11 @@ public class EventPlannerApplication {
             organizationRepository.save(new Organization(null, false, "Al-osztaly 2", true, "Putypurutty utca 2", null, new Organization(1, null, null, null, null, null, null)));
             organizationRepository.save(new Organization(null, false, "Takaritok", true, "Putypurutty utca 2", null, new Organization(2, null, null, null, null, null, null)));
 
-            eventRepository.save(new Event(null, "Kajalas a fonivel", "Lesz sok kaja gyertek", "McDonalds", Date.valueOf(LocalDate.now()), true,
+            eventRepository.save(new Event(null, "Kajalas a fonivel", "Lesz sok kaja gyertek", "McDonalds", LocalDateTime.now(), LocalDateTime.now(), true, "asd",
                     List.of(new Person(1, null, null, null, null, null, null, null),
                             new Person(2, null, null, null, null, null, null, null),
                             new Person(4, null, null, null, null, null, null, null))));
-            eventRepository.save(new Event(null, "Takker buli", "Koszosan gyertek", "3. emelet", Date.valueOf(LocalDate.now()), true,
+            eventRepository.save(new Event(null, "Takker buli", "Koszosan gyertek", "3. emelet", LocalDateTime.now(), LocalDateTime.now(), true, "asd",
                     List.of(new Person(5, null, null, null, null, null, null, null),
                             new Person(6, null, null, null, null, null, null, null))));
         };

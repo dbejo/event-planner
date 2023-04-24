@@ -14,7 +14,7 @@ public class EventService {
 
     public Event create(Event event) {
         log.info("Create new {} event", event.getName());
-        return eventRepository.save(new Event(null, event.getName(), event.getDescription(), event.getLocation(), event.getDate(), event.getActive(), event.getPeople()));
+        return eventRepository.save(new Event(null, event.getName(), event.getDescription(), event.getLocation(), event.getStartDate(), event.getEndDate(), event.getActive(),  event.getAgenda(), event.getPeople()));
     }
 
     public Event modify(Event event) {
