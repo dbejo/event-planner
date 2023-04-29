@@ -35,3 +35,4 @@ build/
 src/main/resources/application.yaml
 
 mvnw
+src/main/resources/application.yaml
